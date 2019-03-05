@@ -12,14 +12,12 @@ public class Main {
 
         // Add a listener which answers with "Pong!" if someone writes "!ping"
         api.addMessageCreateListener(event -> {
-            if (event.getMessage().getContent().substring(0, 5).equalsIgnoreCase("!pong")) { // if the content of the message contains "!pong"
-
-                event.getChannel().sendMessage("Pong!"); // send message "Pong!"
+            if (event.getMessage().getContent().length() >= 5 && event.getMessage().getContent().substring(0, 5).equalsIgnoreCase("!pong")) { // if the content of the message contains "!pong"
+                event.getChannel().sendMessage(event.getMessageAuthor().asUser().get().getMentionTag()); // send message "Pong!"
                 System.out.println("Replied to "+ event.getMessageAuthor().getDisplayName());
             }
         });
 
-        // Print the invite url of your bot
     }
 
 }
