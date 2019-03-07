@@ -12,12 +12,19 @@ public class Main {
 
         // Add a listener which answers with "Pong!" if someone writes "!ping"
         api.addMessageCreateListener(event -> {
-            if (event.getMessage().getContent().length() >= 5 && event.getMessage().getContent().substring(0, 5).equalsIgnoreCase("!pong")) { // if the content of the message contains "!pong"
-                event.getChannel().sendMessage(event.getMessageAuthor().asUser().get().getMentionTag()); // send message "Pong!"
-                System.out.println("Replied to "+ event.getMessageAuthor().getDisplayName());
+            String message = event.getMessage().getContent();
+            if (message.length() >= 1 && message.substring(0, 1).equalsIgnoreCase(":")) {
+
+                if(message.substring(1,5).equals("pong")) {
+                    if (!event.getMessage().getMentionedUsers().isEmpty()) {
+                        event.getChannel().sendMessage(event.getMessage().getMentionedUsers().get(0).getMentionTag());
+                        System.out.println("Replied to " + event.getMessageAuthor().getDisplayName() + "and pinged" + event.getMessage().getMentionedUsers().get(0).getDiscriminatedName());
+                    } else {
+                        event.getChannel().sendMessage("```Incorrect Format used. Format is :pong [user] it's important to also not that pinging more than one person will not work.```");
+                    }
+                }
             }
+
         });
-
     }
-
 }
