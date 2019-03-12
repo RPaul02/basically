@@ -59,14 +59,22 @@ public class Main {
                             ArrayList<User> userArrayList = new ArrayList<>(0);
                             userArrayList.addAll(userCollection);
                             Collections.shuffle(userArrayList);
+                            EmbedBuilder builder = new EmbedBuilder().setTitle("Teams").setColor(Color.black);
+                            ArrayList<User> redTeam = new ArrayList<>(0);
+                            ArrayList<User> blueTeam = new ArrayList<>(0);
                             for(int i = 0; i < userArrayList.size(); i++){
                                 if(i%2==0){
                                     userArrayList.get(i).move(redOptional.get());
+                                    redTeam.add(userArrayList.get(i));
                                 }
-                                else{
+                                else {
                                     userArrayList.get(i).move(blueOptional.get());
+                                    blueTeam.add(userArrayList.get(i));
                                 }
                             }
+                            builder.addField("Red Team", teamToString(redTeam)).addField("Blue Team", teamToString(blueTeam));
+                            event.getChannel().sendMessage(builder);
+
 
                         }
                     } else {
@@ -77,5 +85,14 @@ public class Main {
                 }
             }
         });
+    }
+
+    public static String teamToString(ArrayList<User> team){
+        String val = "";
+        for(User u : team){
+            val = val + "\n" + u.getDiscriminatedName();
+        }
+
+        return val;
     }
 }
