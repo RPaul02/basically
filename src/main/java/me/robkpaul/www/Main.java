@@ -3,9 +3,11 @@ package me.robkpaul.www;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +25,7 @@ public class Main {
 
         api.addMessageCreateListener(event -> {
 
+
             String message = event.getMessage().getContent();
 
             User author = event.getMessageAuthor().asUser().get();
@@ -30,7 +33,6 @@ public class Main {
             Server currentServer = event.getServer().get();
 
             System.out.println("message received");
-
 
             //-pong 1 @user
             if (message.length() >= 1 && message.substring(0, 1).equalsIgnoreCase("-")) {
@@ -68,7 +70,8 @@ public class Main {
 
                         }
                     } else {
-                        event.getChannel().sendMessage("```You have to be connected to a channel to use this command```");
+                        EmbedBuilder builder = new EmbedBuilder().setTitle("Command Error").setDescription("You need to be in a channel to use this command").addField("Sidenote", "Yuck").setColor(Color.RED);
+                        event.getChannel().sendMessage(builder);
                     }
 
                 }
