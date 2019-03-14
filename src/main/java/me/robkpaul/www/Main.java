@@ -3,6 +3,7 @@ package me.robkpaul.www;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
@@ -13,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
@@ -36,8 +39,8 @@ public class Main {
             System.out.println("message received");
 
 
-            if (message.length() >= 1 && message.substring(0, 1).equalsIgnoreCase("-")) {
-                //Pong Command
+            if (!author.isYourself() && message.length() >= 1 && message.substring(0, 1).equalsIgnoreCase("-")) {
+                //pong command
                 if (message.length() >= 5 && message.substring(1, 5).equalsIgnoreCase("pong")) {
                     if (!event.getMessage().getMentionedUsers().isEmpty()) {
                         int i;
@@ -58,34 +61,24 @@ public class Main {
                 else if (message.length() >= 6 && message.substring(1, 6).equalsIgnoreCase("split")) {
                     if (author.getConnectedVoiceChannel(currentServer).isPresent()) {
                         if (author.getConnectedVoiceChannel(currentServer).get().getConnectedUsers().size() >= 1 && redOptional.isPresent() && blueOptional.isPresent()) {
+
                             Collection<User> userCollection = author.getConnectedVoiceChannel(currentServer).get().getConnectedUsers();
                             ArrayList<User> userArrayList = new ArrayList<>(0);
                             userArrayList.addAll(userCollection);
                             Collections.shuffle(userArrayList);
 
-                            String redTeam = "";
-                            String blueTeam = "";
+                            String[] teams = shuffleTeams(userArrayList, redOptional.get(), blueOptional.get());
+                            String redTeam = teams[0];
+                            String blueTeam = teams[1];
 
-                            for (int i = 0; i < userArrayList.size(); i++) {
-                                if (i % 2 == 0) {
-                                    userArrayList.get(i).move(redOptional.get());
-                                    redTeam = redTeam.concat(userArrayList.get(i).getDiscriminatedName());
-                                    if(i<userArrayList.size()-2){
-                                        redTeam = redTeam.concat(", ");
-                                    }
-                                } else {
-                                    userArrayList.get(i).move(blueOptional.get());
-                                    blueTeam = blueTeam.concat(userArrayList.get(i).getDiscriminatedName().concat(", "));
-                                    if(i<userArrayList.size()-2){
-                                        blueTeam = blueTeam.concat(", ");
-                                    }
-                                }
-                            }
-                            if(redTeam.equals(""))
+
+                            if(redTeam.equals("")) {
                                 redTeam = "Empty";
+                            }
 
-                            if(blueTeam.equals(""))
+                            if(blueTeam.equals("")) {
                                 blueTeam = "Empty";
+                            }
 
                             EmbedBuilder builder = new EmbedBuilder()
                                     .setTitle("Teams")
@@ -107,13 +100,73 @@ public class Main {
                     }
 
                 }
+                //looking for group command
+                /*
                 else if(message.length()>=4 && message.substring(1, 4).equalsIgnoreCase("lfg")){
                     String[] fields = message.split("-");
-                    if(fields.length > 2){
-                        event.getChannel().sendMessage(fields[2]);
+                    if(fields.length >= 5) {
+
+                        //- Fields 0 = empty
+                        //- Fields 1 = lfg
+                        //- Fields 2 = game
+                        //- Fields 3 = players
+                        //- Fields 4 = time
+
+                        EmbedBuilder builder = new EmbedBuilder()
+                                .setTitle(author.getDiscriminatedName() + " is Looking for a Group")
+                                .setDescription("1/" + fields[3]+"players")
+                                .addInlineField("Game:", fields[2])
+                                .addInlineField("Time:", fields[4])
+                                .setFooter("Timezone is assumed to be PST");
+
+                        event.getChannel().sendMessage(builder);
+
                     }
+                    else{
+                        EmbedBuilder builder = new EmbedBuilder()
+                                .setTitle("Command Error")
+                                .setColor(Color.red)
+                                .setDescription("Correct Format is ``-lfg -game -players -time``");
+                        event.getChannel().sendMessage(builder);
+                    }
+
                 }
+                */
             }
         });
+        api.addReactionAddListener(event -> {
+            CompletableFuture<Message> msgCompFut = event.requestMessage();
+            Message msg = msgCompFut.get(100, TimeUnit.MILLISECONDS);
+
+                if(msg.getAuthor().isYourself()){
+                    System.out.println("Message Content: " + msg.getContent());
+            }
+
+        });
+    }
+
+
+    private static String[] shuffleTeams(ArrayList<User> userArrayList, ServerVoiceChannel redChannel, ServerVoiceChannel blueChannel){
+        String[] teams = {
+                "",
+                ""
+        };
+        for (int i = 0; i < userArrayList.size(); i++) {
+            if (i % 2 == 0) {
+                userArrayList.get(i).move(redChannel);
+                teams[0] = teams[0].concat(userArrayList.get(i).getDiscriminatedName());
+                if(i<userArrayList.size()-2){
+                    teams[0] = teams[0].concat(", ");
+                }
+            } else {
+                userArrayList.get(i).move(blueChannel);
+                teams[1] = teams[1].concat(userArrayList.get(i).getDiscriminatedName().concat(", "));
+                if(i<userArrayList.size()-2){
+                    teams[1]  = teams[1].concat(", ");
+                }
+            }
+
+        }
+        return teams;
     }
 }
