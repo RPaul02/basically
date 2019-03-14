@@ -35,8 +35,9 @@ public class Main {
 
             System.out.println("message received");
 
-            //-pong 1 @user
+
             if (message.length() >= 1 && message.substring(0, 1).equalsIgnoreCase("-")) {
+                //Pong Command
                 if (message.length() >= 5 && message.substring(1, 5).equalsIgnoreCase("pong")) {
                     if (!event.getMessage().getMentionedUsers().isEmpty()) {
                         int i;
@@ -52,7 +53,9 @@ public class Main {
                     } else {
                         event.getChannel().sendMessage("```Incorrect Format used. Format is :pong [user] it's important to note that ponging more than one person at once will not work.```");
                     }
-                } else if (message.length() >= 6 && message.substring(1, 6).equalsIgnoreCase("split")) {
+                }
+                //split teams command
+                else if (message.length() >= 6 && message.substring(1, 6).equalsIgnoreCase("split")) {
                     if (author.getConnectedVoiceChannel(currentServer).isPresent()) {
                         if (author.getConnectedVoiceChannel(currentServer).get().getConnectedUsers().size() >= 1 && redOptional.isPresent() && blueOptional.isPresent()) {
                             Collection<User> userCollection = author.getConnectedVoiceChannel(currentServer).get().getConnectedUsers();
@@ -94,7 +97,8 @@ public class Main {
                             System.out.println("Blue Team: " + blueTeam + " Red Team: " + redTeam);
 
                         }
-                    } else {
+                    }
+                    else {
                         EmbedBuilder builder = new EmbedBuilder()
                                 .setTitle("Command Error")
                                 .setDescription("You need to be in a channel to use this command")
@@ -102,6 +106,12 @@ public class Main {
                         event.getChannel().sendMessage(builder);
                     }
 
+                }
+                else if(message.length()>=4 && message.substring(1, 4).equalsIgnoreCase("lfg")){
+                    String[] fields = message.split("-");
+                    if(fields.length > 2){
+                        event.getChannel().sendMessage(fields[2]);
+                    }
                 }
             }
         });
