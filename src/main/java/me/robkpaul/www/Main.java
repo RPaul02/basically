@@ -4,6 +4,7 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
@@ -15,7 +16,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class Main {
 
@@ -65,20 +68,10 @@ public class Main {
                             Collection<User> userCollection = author.getConnectedVoiceChannel(currentServer).get().getConnectedUsers();
                             ArrayList<User> userArrayList = new ArrayList<>(0);
                             userArrayList.addAll(userCollection);
-                            Collections.shuffle(userArrayList);
 
                             String[] teams = shuffleTeams(userArrayList, redOptional.get(), blueOptional.get());
                             String redTeam = teams[0];
                             String blueTeam = teams[1];
-
-
-                            if(redTeam.equals("")) {
-                                redTeam = "Empty";
-                            }
-
-                            if(blueTeam.equals("")) {
-                                blueTeam = "Empty";
-                            }
 
                             EmbedBuilder builder = new EmbedBuilder()
                                     .setTitle("Teams")
@@ -101,7 +94,7 @@ public class Main {
 
                 }
                 //looking for group command
-                /*
+
                 else if(message.length()>=4 && message.substring(1, 4).equalsIgnoreCase("lfg")){
                     String[] fields = message.split("-");
                     if(fields.length >= 5) {
@@ -131,26 +124,61 @@ public class Main {
                     }
 
                 }
-                */
+
             }
         });
-        api.addReactionAddListener(event -> {
-            CompletableFuture<Message> msgCompFut = event.requestMessage();
-            Message msg = msgCompFut.get(100, TimeUnit.MILLISECONDS);
 
-                if(msg.getAuthor().isYourself()){
-                    System.out.println("Message Content: " + msg.getContent());
+
+        api.addReactionAddListener(event -> {
+
+            Message msg = null;
+            try {
+                msg = event.requestMessage().get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
             }
+                if (msg != null
+                        && msg.getAuthor().isYourself()
+                        && !msg.getEmbeds().isEmpty()
+                        && !msg.getEmbeds().get(0).getTitle().isPresent()
+                        && msg.getEmbeds().get(0).getTitle().get().equalsIgnoreCase("teams")
+                ){
+                    System.out.println("Reshuffling Teams...");
+
+
+                    if(redOptional.isPresent() && blueOptional.isPresent()){
+                        ArrayList<User> userArrayList = new ArrayList<>(0);
+                        userArrayList.addAll(redOptional.get().getConnectedUsers());
+                        userArrayList.addAll(blueOptional.get().getConnectedUsers());
+                        String[] teams = shuffleTeams(userArrayList, redOptional.get(),blueOptional.get() );
+                        String blueTeam = teams[1];
+                        String redTeam = teams[0];
+
+                        EmbedBuilder builder = new EmbedBuilder()
+                                .setTitle("Teams")
+                                .setDescription("Teams set by the Split command.")
+                                .setColor(Color.black)
+                                .addField("Red Team", redTeam)
+                                .addField("Blue Team", blueTeam);
+                        System.out.println("Blue Team: " + blueTeam + " Red Team: " + redTeam);
+
+                        msg.delete();
+                        msg.getChannel().sendMessage(builder);
+
+                    }
+                    else{
+                        System.out.print("Interrupted? \n");
+                    }
+                }
 
         });
     }
 
 
     private static String[] shuffleTeams(ArrayList<User> userArrayList, ServerVoiceChannel redChannel, ServerVoiceChannel blueChannel){
-        String[] teams = {
-                "",
-                ""
-        };
+        String[] teams = {"", ""};
+        Collections.shuffle(userArrayList);
+
         for (int i = 0; i < userArrayList.size(); i++) {
             if (i % 2 == 0) {
                 userArrayList.get(i).move(redChannel);
@@ -166,6 +194,11 @@ public class Main {
                 }
             }
 
+        }
+        if(teams[0].equals("")) {
+            teams[0] = ("Empty");
+        } if(teams[1].equals("")) {
+            teams[1] = "Empty";
         }
         return teams;
     }
