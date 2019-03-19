@@ -137,20 +137,27 @@ public class Main {
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
-                if (msg != null
-                        && msg.getAuthor().isYourself()
-                        && !msg.getEmbeds().isEmpty()
-                        && !msg.getEmbeds().get(0).getTitle().isPresent()
-                        && msg.getEmbeds().get(0).getTitle().get().equalsIgnoreCase("teams")
-                ){
-                    System.out.println("Reshuffling Teams...");
+            if (msg != null
+                    && msg.getAuthor().isYourself()
+                    && !msg.getEmbeds().isEmpty()
+                    && msg.getEmbeds().get(0).getTitle().isPresent()
+            ){
+                if(msg.getEmbeds().get(0).getTitle().get().equalsIgnoreCase("teams")) {
+                    System.out.print("Reshuffling Teams...");
 
 
-                    if(redOptional.isPresent() && blueOptional.isPresent()){
+                    if (redOptional.isPresent()
+                            && blueOptional.isPresent()
+                            && msg.getServer().isPresent()
+                            && (event.getUser().getConnectedVoiceChannel(msg.getServer().get()).equals(blueOptional)
+                            || event.getUser().getConnectedVoiceChannel(msg.getServer().get()).equals(redOptional))
+                    ) {
+
+
                         ArrayList<User> userArrayList = new ArrayList<>(0);
                         userArrayList.addAll(redOptional.get().getConnectedUsers());
                         userArrayList.addAll(blueOptional.get().getConnectedUsers());
-                        String[] teams = shuffleTeams(userArrayList, redOptional.get(),blueOptional.get() );
+                        String[] teams = shuffleTeams(userArrayList, redOptional.get(), blueOptional.get());
                         String blueTeam = teams[1];
                         String redTeam = teams[0];
 
@@ -162,15 +169,17 @@ public class Main {
                                 .addField("Blue Team", blueTeam);
                         System.out.println("Blue Team: " + blueTeam + " Red Team: " + redTeam);
 
-                        msg.delete();
-                        msg.getChannel().sendMessage(builder);
+                        msg.edit(builder);
+                        msg.removeAllReactions();
 
-                    }
-                    else{
-                        System.out.print("Interrupted? \n");
+                    } else {
+                        System.out.println("Interrupted?");
                     }
                 }
-
+                else if(msg.getEmbeds().get(0).getTitle().get().substring(msg.getEmbeds().get(0).getTitle().get().length()-18).equalsIgnoreCase("Looking for Group")){
+                    System.out.println("+1");
+                }
+            }
         });
     }
 
