@@ -4,26 +4,21 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.message.Message;
-import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
-import org.javacord.api.util.logging.ExceptionLogger;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class Main {
 
     public static void main(String[] args) {
-        String token = "NTQ2MDE3OTM2NDUyNjE2MjAw.D1b_aA.SAyWr81MM2i0e20a9YlOc0VFuZ8"; // bot token
+        String token = "a"; // bot token
 
         DiscordApi api = new DiscordApiBuilder().setToken(token).login().join();
 
@@ -35,20 +30,20 @@ public class Main {
 
             String message = event.getMessage().getContent();
 
-            User author = event.getMessageAuthor().asUser().get();
+            User author = event.getMessageAuthor().asUser().isPresent() ? event.getMessageAuthor().asUser().get() : null;
 
-            Server currentServer = event.getServer().get();
+            Server currentServer = event.getServer().isPresent() ? event.getServer().get() : null;
 
             System.out.println("message received");
 
 
-            if (!author.isYourself() && message.length() >= 1 && message.substring(0, 1).equalsIgnoreCase("-")) {
+            if (author != null && !author.isYourself() && message.length() >= 1 && message.substring(0, 1).equalsIgnoreCase("-")) {
                 //pong command
                 if (message.length() >= 5 && message.substring(1, 5).equalsIgnoreCase("pong")) {
                     if (!event.getMessage().getMentionedUsers().isEmpty()) {
                         int i;
                         try {
-                            i = Integer.parseInt(message.substring(6, 7));
+                            i = Integer.parseInt(message.substring(6));
                         } catch (NumberFormatException e) {
                             i = 1;
                         }
@@ -83,8 +78,7 @@ public class Main {
                             System.out.println("Blue Team: " + blueTeam + " Red Team: " + redTeam);
 
                         }
-                    }
-                    else {
+                    } else {
                         EmbedBuilder builder = new EmbedBuilder()
                                 .setTitle("Command Error")
                                 .setDescription("You need to be in a channel to use this command")
@@ -95,9 +89,9 @@ public class Main {
                 }
                 //looking for group command
 
-                else if(message.length()>=4 && message.substring(1, 4).equalsIgnoreCase("lfg")){
+                else if (message.length() >= 4 && message.substring(1, 4).equalsIgnoreCase("lfg")) {
                     String[] fields = message.split("-");
-                    if(fields.length >= 5) {
+                    if (fields.length >= 5) {
 
                         //- Fields 0 = empty
                         //- Fields 1 = lfg
@@ -107,15 +101,14 @@ public class Main {
 
                         EmbedBuilder builder = new EmbedBuilder()
                                 .setTitle(author.getDiscriminatedName() + " is Looking for a Group")
-                                .setDescription("1/" + fields[3]+"players")
+                                .setDescription("1/" + fields[3] + "players")
                                 .addInlineField("Game:", fields[2])
                                 .addInlineField("Time:", fields[4])
                                 .setFooter("Timezone is assumed to be PST");
 
                         event.getChannel().sendMessage(builder);
 
-                    }
-                    else{
+                    } else {
                         EmbedBuilder builder = new EmbedBuilder()
                                 .setTitle("Command Error")
                                 .setColor(Color.red)
@@ -141,8 +134,8 @@ public class Main {
                     && msg.getAuthor().isYourself()
                     && !msg.getEmbeds().isEmpty()
                     && msg.getEmbeds().get(0).getTitle().isPresent()
-            ){
-                if(msg.getEmbeds().get(0).getTitle().get().equalsIgnoreCase("teams")) {
+            ) {
+                if (msg.getEmbeds().get(0).getTitle().get().equalsIgnoreCase("teams")) {
                     System.out.print("Reshuffling Teams...");
 
 
@@ -175,8 +168,7 @@ public class Main {
                     } else {
                         System.out.println("Interrupted?");
                     }
-                }
-                else if(msg.getEmbeds().get(0).getTitle().get().substring(msg.getEmbeds().get(0).getTitle().get().length()-18).equalsIgnoreCase("Looking for Group")){
+                } else if (msg.getEmbeds().get(0).getTitle().get().substring(msg.getEmbeds().get(0).getTitle().get().length() - 18).equalsIgnoreCase("Looking for Group")) {
                     System.out.println("+1");
                 }
             }
@@ -184,7 +176,7 @@ public class Main {
     }
 
 
-    private static String[] shuffleTeams(ArrayList<User> userArrayList, ServerVoiceChannel redChannel, ServerVoiceChannel blueChannel){
+    private static String[] shuffleTeams(ArrayList<User> userArrayList, ServerVoiceChannel redChannel, ServerVoiceChannel blueChannel) {
         String[] teams = {"", ""};
         Collections.shuffle(userArrayList);
 
@@ -192,21 +184,22 @@ public class Main {
             if (i % 2 == 0) {
                 userArrayList.get(i).move(redChannel);
                 teams[0] = teams[0].concat(userArrayList.get(i).getDiscriminatedName());
-                if(i<userArrayList.size()-2){
+                if (i < userArrayList.size() - 2) {
                     teams[0] = teams[0].concat(", ");
                 }
             } else {
                 userArrayList.get(i).move(blueChannel);
                 teams[1] = teams[1].concat(userArrayList.get(i).getDiscriminatedName().concat(", "));
-                if(i<userArrayList.size()-2){
-                    teams[1]  = teams[1].concat(", ");
+                if (i < userArrayList.size() - 2) {
+                    teams[1] = teams[1].concat(", ");
                 }
             }
 
         }
-        if(teams[0].equals("")) {
+        if (teams[0].equals("")) {
             teams[0] = ("Empty");
-        } if(teams[1].equals("")) {
+        }
+        if (teams[1].equals("")) {
             teams[1] = "Empty";
         }
         return teams;
