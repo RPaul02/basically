@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutionException;
 public class Main {
 
     public static void main(String[] args) {
-        String token = "a"; // bot token
+        String token = "NTQ2MDE3OTM2NDUyNjE2MjAw.XObAnA.jCgccPeQjpeY_EKPI_zlaByHn28"; // bot token
 
         DiscordApi api = new DiscordApiBuilder().setToken(token).login().join();
 
@@ -57,7 +57,7 @@ public class Main {
                 }
                 //split teams command
                 else if (message.length() >= 6 && message.substring(1, 6).equalsIgnoreCase("split")) {
-                    if (author.getConnectedVoiceChannel(currentServer).isPresent()) {
+                    if (currentServer != null && author.getConnectedVoiceChannel(currentServer).isPresent()) {
                         if (author.getConnectedVoiceChannel(currentServer).get().getConnectedUsers().size() >= 1 && redOptional.isPresent() && blueOptional.isPresent()) {
 
                             Collection<User> userCollection = author.getConnectedVoiceChannel(currentServer).get().getConnectedUsers();

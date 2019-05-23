@@ -1,4 +1,4 @@
 package me.robkpaul.www.commands;
 
-public class pong {
+public class LFG {
 }
