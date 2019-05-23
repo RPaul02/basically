@@ -9,16 +9,28 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
 import java.awt.*;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collector;
 
 public class Main {
 
     public static void main(String[] args) {
-        String token = "NTQ2MDE3OTM2NDUyNjE2MjAw.XObAnA.jCgccPeQjpeY_EKPI_zlaByHn28"; // bot token
+        String token = null;
+        try {
+            token = Files.lines(Paths.get("token.txt"), StandardCharsets.UTF_8).collect(new Collector<String>() {
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        ; // bot token
 
         DiscordApi api = new DiscordApiBuilder().setToken(token).login().join();
 

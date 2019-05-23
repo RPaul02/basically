@@ -13,5 +13,6 @@ repositories {
 
 dependencies {
     implementation 'org.javacord:javacord:3.0.4'
+    compile 'com.mashape.unirest:unirest-java:1.4.9'
 
 }
