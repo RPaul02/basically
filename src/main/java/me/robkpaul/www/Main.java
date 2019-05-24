@@ -8,7 +8,7 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,19 +18,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Main {
 
     public static void main(String[] args) {
         String token = null;
-        try {
-            token = Files.lines(Paths.get("token.txt"), StandardCharsets.UTF_8).collect(new Collector<String>() {
-            });
+        try (Stream<String> stream = Files.lines(Paths.get("token.txt"), StandardCharsets.UTF_8)) {
+            token = stream.collect(Collectors.joining());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        ; // bot token
 
         DiscordApi api = new DiscordApiBuilder().setToken(token).login().join();
 
@@ -46,23 +45,24 @@ public class Main {
 
             Server currentServer = event.getServer().isPresent() ? event.getServer().get() : null;
 
-            System.out.println("message received");
-
+            if(author != null && !author.isYourself()) {System.out.println("message received");}
 
             if (author != null && !author.isYourself() && message.length() >= 1 && message.substring(0, 1).equalsIgnoreCase("-")) {
                 //pong command
                 if (message.length() >= 5 && message.substring(1, 5).equalsIgnoreCase("pong")) {
                     if (!event.getMessage().getMentionedUsers().isEmpty()) {
                         int i;
+                        String[] fields = message.split(" ");
+
                         try {
-                            i = Integer.parseInt(message.substring(6));
+                            i = Integer.parseInt(fields[2]);
                         } catch (NumberFormatException e) {
                             i = 1;
                         }
                         for (int j = 0; j < i; j++) {
                             event.getChannel().sendMessage(event.getMessage().getMentionedUsers().get(0).getMentionTag());
                         }
-                        System.out.println("Replied to " + event.getMessageAuthor().getDisplayName() + "and pinged" + event.getMessage().getMentionedUsers().get(0).getDiscriminatedName());
+                        System.out.println("Replied to " + event.getMessageAuthor().getDisplayName() + " and pinged " + event.getMessage().getMentionedUsers().get(0).getDiscriminatedName() + " " + i + " times.");
                     } else {
                         event.getChannel().sendMessage("```Incorrect Format used. Format is :pong [user] it's important to note that ponging more than one person at once will not work.```");
                     }
@@ -130,59 +130,6 @@ public class Main {
 
                 }
 
-            }
-        });
-
-
-        api.addReactionAddListener(event -> {
-
-            Message msg = null;
-            try {
-                msg = event.requestMessage().get();
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
-            if (msg != null
-                    && msg.getAuthor().isYourself()
-                    && !msg.getEmbeds().isEmpty()
-                    && msg.getEmbeds().get(0).getTitle().isPresent()
-            ) {
-                if (msg.getEmbeds().get(0).getTitle().get().equalsIgnoreCase("teams")) {
-                    System.out.print("Reshuffling Teams...");
-
-
-                    if (redOptional.isPresent()
-                            && blueOptional.isPresent()
-                            && msg.getServer().isPresent()
-                            && (event.getUser().getConnectedVoiceChannel(msg.getServer().get()).equals(blueOptional)
-                            || event.getUser().getConnectedVoiceChannel(msg.getServer().get()).equals(redOptional))
-                    ) {
-
-
-                        ArrayList<User> userArrayList = new ArrayList<>(0);
-                        userArrayList.addAll(redOptional.get().getConnectedUsers());
-                        userArrayList.addAll(blueOptional.get().getConnectedUsers());
-                        String[] teams = shuffleTeams(userArrayList, redOptional.get(), blueOptional.get());
-                        String blueTeam = teams[1];
-                        String redTeam = teams[0];
-
-                        EmbedBuilder builder = new EmbedBuilder()
-                                .setTitle("Teams")
-                                .setDescription("Teams set by the Split command.")
-                                .setColor(Color.black)
-                                .addField("Red Team", redTeam)
-                                .addField("Blue Team", blueTeam);
-                        System.out.println("Blue Team: " + blueTeam + " Red Team: " + redTeam);
-
-                        msg.edit(builder);
-                        msg.removeAllReactions();
-
-                    } else {
-                        System.out.println("Interrupted?");
-                    }
-                } else if (msg.getEmbeds().get(0).getTitle().get().substring(msg.getEmbeds().get(0).getTitle().get().length() - 18).equalsIgnoreCase("Looking for Group")) {
-                    System.out.println("+1");
-                }
             }
         });
     }
