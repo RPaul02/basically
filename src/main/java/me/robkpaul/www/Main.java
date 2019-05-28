@@ -1,9 +1,9 @@
 package me.robkpaul.www;
 
+import com.mashape.unirest.request.GetRequest;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
-import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,12 +39,14 @@ public class Main {
 
 
             String message = event.getMessage().getContent();
-
+            String[] msgFields = message.split(" ");
             User author = event.getMessageAuthor().asUser().isPresent() ? event.getMessageAuthor().asUser().get() : null;
-
             Server currentServer = event.getServer().isPresent() ? event.getServer().get() : null;
 
-            if(author != null && !author.isYourself()) {System.out.println("message received");}
+            if(author != null && !author.isYourself()) {
+                System.out.println("message received");
+            }
+
 
             if (author != null && !author.isYourself() && message.length() >= 1 && message.substring(0, 1).equalsIgnoreCase("-")) {
                 //pong command
@@ -59,10 +60,12 @@ public class Main {
                         } catch (NumberFormatException e) {
                             i = 1;
                         }
-                        for (int j = 0; j < i; j++) {
+                        System.out.print("Replying to " + event.getMessageAuthor().getDisplayName() + " and pinging " + event.getMessage().getMentionedUsers().get(0).getDiscriminatedName() + " " + i + " times.");
+                        while(i != 0){
                             event.getChannel().sendMessage(event.getMessage().getMentionedUsers().get(0).getMentionTag());
+                            i -= 1;
                         }
-                        System.out.println("Replied to " + event.getMessageAuthor().getDisplayName() + " and pinged " + event.getMessage().getMentionedUsers().get(0).getDiscriminatedName() + " " + i + " times.");
+                        System.out.println(" Completed.");
                     } else {
                         event.getChannel().sendMessage("```Incorrect Format used. Format is :pong [user] it's important to note that ponging more than one person at once will not work.```");
                     }
@@ -99,9 +102,10 @@ public class Main {
                     }
 
                 }
-                //looking for group command
 
+                //looking for group command
                 else if (message.length() >= 4 && message.substring(1, 4).equalsIgnoreCase("lfg")) {
+
                     String[] fields = message.split("-");
                     if (fields.length >= 5) {
 
@@ -128,6 +132,20 @@ public class Main {
                         event.getChannel().sendMessage(builder);
                     }
 
+                }
+
+                //jacket command
+                else if (msgFields.length == 2 && msgFields[0].equals("-jacket")){
+                    String zip = msgFields[1];
+                    if(zip.length() == 5){
+                    }
+                    else{
+                        EmbedBuilder builder = new EmbedBuilder()
+                                .setTitle("Command Error")
+                                .setColor(Color.red)
+                                .setDescription("Invalid US Zip Code");
+                        event.getChannel().sendMessage(builder);
+                    }
                 }
 
             }
