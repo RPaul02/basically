@@ -1,12 +1,16 @@
 package me.robkpaul.www;
 
+import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.request.GetRequest;
+import com.mashape.unirest.request.HttpRequestWithBody;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -17,8 +21,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class Main {
 
@@ -138,6 +146,38 @@ public class Main {
                 else if (msgFields.length == 2 && msgFields[0].equals("-jacket")){
                     String zip = msgFields[1];
                     if(zip.length() == 5){
+
+                        GetRequest locRequest = Unirest.get("http://dataservice.accuweather.com/locations/v1/postalcodes/search?apikey="+"z4ZZThcZipS7I2GGzSOAkEG8Gvb889W4"+"&q="+zip);
+                        try {
+                            boolean needsJacket;
+                            boolean rain;
+                            String jacketWeight="";
+                            int tempF;
+                            String cond;
+
+                            String locKey = (String)locRequest.asJsonAsync().get().getBody().getArray().getJSONObject(0).get("Key");
+                            GetRequest weatherRequest = Unirest.get("http://dataservice.accuweather.com/currentconditions/v1/"+locKey+"?apikey="+"z4ZZThcZipS7I2GGzSOAkEG8Gvb889W4");
+                            JSONObject weather = locRequest.asJsonAsync().get().getBody().getObject();
+
+                            rain = weather.getBoolean("HasPrecipitation");
+                            needsJacket = weather.getBoolean("HasPrecipitation");
+                            tempF = weather.getJSONObject("Temperature").getJSONObject("Imperial").getInt("Value");
+                            cond = weather.getString("WeatherText");
+
+                            if(tempF<=50){
+                                jacketWeight = "warm";
+                                needsJacket=true;
+                            }
+                            EmbedBuilder builder = new EmbedBuilder()
+                                    .setTitle(needsJacket? "You need a "+jacketWeight+ (rain?"rain" : "") +" jacket." : "You don't need a jacket!")
+                                    .setDescription("It is currently " + tempF + "°F and "+ cond)
+                                    .setColor(Color.blue);
+                            event.getChannel().sendMessage(builder);
+
+                        } catch (InterruptedException|ExecutionException e) {
+                            e.printStackTrace();
+                        }
+
                     }
                     else{
                         EmbedBuilder builder = new EmbedBuilder()
