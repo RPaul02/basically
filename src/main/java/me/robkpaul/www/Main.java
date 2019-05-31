@@ -2,17 +2,15 @@ package me.robkpaul.www;
 
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.request.GetRequest;
-import com.mashape.unirest.request.HttpRequestWithBody;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -26,7 +24,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class Main {
 
@@ -51,7 +49,7 @@ public class Main {
             User author = event.getMessageAuthor().asUser().isPresent() ? event.getMessageAuthor().asUser().get() : null;
             Server currentServer = event.getServer().isPresent() ? event.getServer().get() : null;
 
-            if(author != null && !author.isYourself()) {
+            if (author != null && !author.isYourself()) {
                 System.out.println("message received");
             }
 
@@ -69,7 +67,7 @@ public class Main {
                             i = 1;
                         }
                         System.out.print("Replying to " + event.getMessageAuthor().getDisplayName() + " and pinging " + event.getMessage().getMentionedUsers().get(0).getDiscriminatedName() + " " + i + " times.");
-                        while(i != 0){
+                        while (i != 0) {
                             event.getChannel().sendMessage(event.getMessage().getMentionedUsers().get(0).getMentionTag());
                             i -= 1;
                         }
@@ -143,43 +141,42 @@ public class Main {
                 }
 
                 //jacket command
-                else if (msgFields.length == 2 && msgFields[0].equals("-jacket")){
+                else if (msgFields.length == 2 && msgFields[0].equals("-jacket")) {
                     String zip = msgFields[1];
-                    if(zip.length() == 5){
+                    if (zip.length() == 5) {
 
-                        GetRequest locRequest = Unirest.get("http://dataservice.accuweather.com/locations/v1/postalcodes/search?apikey="+"z4ZZThcZipS7I2GGzSOAkEG8Gvb889W4"+"&q="+zip);
+                        GetRequest locRequest = Unirest.get("http://dataservice.accuweather.com/locations/v1/postalcodes/search?apikey=" + "z4ZZThcZipS7I2GGzSOAkEG8Gvb889W4" + "&q=" + zip); //TODO: put accuweather key external
                         try {
                             boolean needsJacket;
                             boolean rain;
-                            String jacketWeight="";
+                            String jacketWeight = "";
                             int tempF;
                             String cond;
 
-                            String locKey = (String)locRequest.asJsonAsync().get().getBody().getArray().getJSONObject(0).get("Key");
-                            GetRequest weatherRequest = Unirest.get("http://dataservice.accuweather.com/currentconditions/v1/"+locKey+"?apikey="+"z4ZZThcZipS7I2GGzSOAkEG8Gvb889W4");
-                            JSONObject weather = locRequest.asJsonAsync().get().getBody().getObject();
+                            String locKey = (String) locRequest.asJsonAsync().get(1, SECONDS).getBody().getArray().getJSONObject(0).get("Key");
+                            GetRequest weatherRequest = Unirest.get("http://dataservice.accuweather.com/currentconditions/v1/" + locKey + "?apikey=" + "z4ZZThcZipS7I2GGzSOAkEG8Gvb889W4");
+                            JSONObject weather = weatherRequest.asJsonAsync().get(1, SECONDS).getBody().getObject();
 
-                            rain = weather.getBoolean("HasPrecipitation");
-                            needsJacket = weather.getBoolean("HasPrecipitation");
+                            rain = weather.getJSONArray("HasPrecipitation").getBoolean(0);
+                            needsJacket = rain;
                             tempF = weather.getJSONObject("Temperature").getJSONObject("Imperial").getInt("Value");
                             cond = weather.getString("WeatherText");
 
-                            if(tempF<=50){
+                            if (tempF <= 50) {
                                 jacketWeight = "warm";
-                                needsJacket=true;
+                                needsJacket = true;
                             }
                             EmbedBuilder builder = new EmbedBuilder()
-                                    .setTitle(needsJacket? "You need a "+jacketWeight+ (rain?"rain" : "") +" jacket." : "You don't need a jacket!")
-                                    .setDescription("It is currently " + tempF + "°F and "+ cond)
+                                    .setTitle(needsJacket ? "You need a " + jacketWeight + (rain ? "rain" : "") + " jacket." : "You don't need a jacket!")
+                                    .setDescription("It is currently " + tempF + "°F and " + cond)
                                     .setColor(Color.blue);
                             event.getChannel().sendMessage(builder);
 
-                        } catch (InterruptedException|ExecutionException e) {
+                        } catch (InterruptedException | ExecutionException | TimeoutException e) {
                             e.printStackTrace();
                         }
 
-                    }
-                    else{
+                    } else {
                         EmbedBuilder builder = new EmbedBuilder()
                                 .setTitle("Command Error")
                                 .setColor(Color.red)
