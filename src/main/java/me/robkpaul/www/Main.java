@@ -155,9 +155,9 @@ public class Main {
 
                             String locKey = (String) locRequest.asJsonAsync().get(1, SECONDS).getBody().getArray().getJSONObject(0).get("Key");
                             GetRequest weatherRequest = Unirest.get("http://dataservice.accuweather.com/currentconditions/v1/" + locKey + "?apikey=" + "z4ZZThcZipS7I2GGzSOAkEG8Gvb889W4");
-                            JSONObject weather = weatherRequest.asJsonAsync().get(1, SECONDS).getBody().getObject();
+                            JSONObject weather = weatherRequest.asJsonAsync().get(1, SECONDS).getBody().getArray().getJSONObject(0);
 
-                            rain = weather.getJSONArray("HasPrecipitation").getBoolean(0);
+                            rain = weather.getBoolean("HasPrecipitation");
                             needsJacket = rain;
                             tempF = weather.getJSONObject("Temperature").getJSONObject("Imperial").getInt("Value");
                             cond = weather.getString("WeatherText");
